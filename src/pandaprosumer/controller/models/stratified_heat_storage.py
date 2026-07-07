@@ -437,7 +437,21 @@ class StratifiedHeatStorageController(BasicProsumerController):
     def _calculate_heat_storage(self, prosumer, mdot_demand_kg_per_s, t_received_in_c, t_demand_out_c, t_demand_in_c,
                                 t_discharge_out_c, mdot_received_kg_per_s, t_charge_out_c):
 
-        if not self.bypass:
+        force_charge    = getattr(self, '_forced_mdot_charge_kg_per_s',    np.nan)
+        force_discharge = getattr(self, '_forced_mdot_discharge_kg_per_s', np.nan)
+
+        if not np.isnan(force_charge):
+            mdot_charge_kg_per_s    = force_charge
+            mdot_discharge_kg_per_s = 0
+            mdot_bypass_kg_per_s    = mdot_received_kg_per_s - mdot_charge_kg_per_s
+            t_bypass_in_c           = t_received_in_c
+        elif not np.isnan(force_discharge):
+            mdot_discharge_kg_per_s = force_discharge
+            mdot_charge_kg_per_s    = 0
+            mdot_bypass_kg_per_s    = mdot_received_kg_per_s
+            t_bypass_in_c           = t_received_in_c
+            
+        elif not self.bypass:
             mdot_charge_kg_per_s = mdot_received_kg_per_s
             mdot_discharge_kg_per_s = mdot_demand_kg_per_s
             mdot_bypass_kg_per_s = 0
